@@ -2,7 +2,7 @@ src = $(wildcard *.c)
 obj = $(src:.c=.o)
 
 CC = gcc
-CFLAGS = -g -std=c99
+CFLAGS = -g -std=c99 -lnetpbm
 
 mnist-shenanigans: $(obj)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
