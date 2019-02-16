@@ -3,7 +3,9 @@
 #include <assert.h>
 #include <math.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 struct stoopidnet
 {
@@ -53,13 +55,12 @@ void stoopidnet_destroy(stoopidnet_t* net)
 {
     for (int i = 0; i < net->num_layers; i++) {
         free(net->biases[i]);
-        free(net->layer_sizes[i]);
     }
 
     for (int i = 0; i < (net->num_layers - 1); i++) {
         free(net->weights[i]);
     }
-
+    free(net->layer_sizes);
     free(net);
 }
 
@@ -112,8 +113,6 @@ void stoopidnet_set_layer_weights(stoopidnet_t* net, uint32_t layer_idx, double*
 
 void stoopidnet_evaluate(stoopidnet_t* net, double* input, double** output)
 {
-    int last_layer_size = net->layer_sizes[net->num_layers - 1];
-
     double *z = malloc(net->layer_sizes[0] * sizeof(double));
     memcpy(z, input, sizeof(double) * net->layer_sizes[0]);
     double *znext = NULL;
@@ -143,6 +142,7 @@ void stoopidnet_evaluate(stoopidnet_t* net, double* input, double** output)
 
 void stoopidnet_train(stoopidnet_t* net,
                       const stoopidnet_training_parameters_t* params,
+                      uint32_t n_inputs,
                       double** inputs,
                       double** outputs)
 {
