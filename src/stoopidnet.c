@@ -126,8 +126,9 @@ void stoopidnet_evaluate(stoopidnet_t* net, double* input, double** output)
             double accum = 0.;
             for (int k = 0; k < net->layer_sizes[l - 1]; k++) {
                 int idx = (j * net->layer_sizes[l - 1]) + k;
-                accum += (net->weights[l - 1])[idx] * ;
+                accum += (net->weights[l - 1])[idx] * z[k];
             }
+            znext[j] = sigmoid(accum - (net->biases[l - 1])[j]);
         }
 
         // copy new layer into z.
@@ -135,11 +136,8 @@ void stoopidnet_evaluate(stoopidnet_t* net, double* input, double** output)
         z = znext;
     }
 
-    //z now contains result.
+    //z now contains result. It's the caller's responsibility to free.
     *output = z;
-
-    //cleanup.
-    free(znext);
 }
 
 
