@@ -4,3 +4,6 @@ data/*
 *.o
 src/mnist-shenanigans
 src/mnist-peek
+src/stoopidnet-test-serdes
+src/stoopidnet-train
+src/stoopidnet-run

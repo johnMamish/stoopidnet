@@ -93,6 +93,23 @@ cleanup:
 /**
  *
  */
-int load_label_file_doubles(const char* filepath, double*** target);
+int load_label_file_doubles(const char* filepath, double*** target)
+{
+    uint8_t* labels_u8;
+    int numel = load_label_file(filepath, &labels_u8);
 
-int load_data_filedoubles(const char* filepath, double*** target);
+    if (numel == 0) {
+        *target = NULL;
+    } else {
+        *target = malloc(numel * sizeof(double*));
+        for (int i = 0; i < numel; i++) {
+            (*target)[i] = 0.;
+        }
+    }
+
+}
+
+int load_data_file_doubles(const char* filepath, double*** target)
+{
+
+}

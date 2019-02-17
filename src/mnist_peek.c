@@ -42,7 +42,7 @@ int main(int argc, char** argv)
     int count = 0;
     for (int y = 0; y < wh[1]; y++) {
         for (int x = 0; x < wh[0]; x++, count++) {
-            printf("%i ", (int)((pics[idx])[count]));
+            printf("%i ", 255 - (int)((pics[idx])[count]));
         }
         printf("\n");
     }
