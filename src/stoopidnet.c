@@ -113,30 +113,30 @@ void stoopidnet_set_layer_weights(stoopidnet_t* net, uint32_t layer_idx, double*
 
 void stoopidnet_evaluate(stoopidnet_t* net, double* input, double** output)
 {
-    double *z = malloc(net->layer_sizes[0] * sizeof(double));
-    memcpy(z, input, sizeof(double) * net->layer_sizes[0]);
-    double *znext = NULL;
+    double *activation = malloc(net->layer_sizes[0] * sizeof(double));
+    memcpy(activation, input, sizeof(double) * net->layer_sizes[0]);
+    double *activiation_next = NULL;
 
     for (int l = 1; l < net->num_layers; l++) {
-        znext = malloc(net->layer_sizes[l]);
+        activiation_next = malloc(net->layer_sizes[l]);
 
-        // calculate next layer into znext
+        // calculate next layer into activiation_next
         for (int j = 0; j < net->layer_sizes[l]; j++) {
             double accum = 0.;
             for (int k = 0; k < net->layer_sizes[l - 1]; k++) {
                 int idx = (j * net->layer_sizes[l - 1]) + k;
-                accum += (net->weights[l - 1])[idx] * z[k];
+                accum += (net->weights[l - 1])[idx] * activation[k];
             }
-            znext[j] = sigmoid(accum - (net->biases[l - 1])[j]);
+            activiation_next[j] = sigmoid(accum - (net->biases[l - 1])[j]);
         }
 
-        // copy new layer into z.
-        free(z);
-        z = znext;
+        // copy new layer into activiation.
+        free(activation);
+        activation = activiation_next;
     }
 
-    //z now contains result. It's the caller's responsibility to free.
-    *output = z;
+    //activation now contains result. It's the caller's responsibility to free.
+    *output = activation;
 }
 
 

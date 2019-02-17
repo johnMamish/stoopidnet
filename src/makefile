@@ -2,9 +2,16 @@ src = $(wildcard *.c)
 obj = $(src:.c=.o)
 
 CC = gcc
-CFLAGS = -g -std=c99 -lnetpbm -Werror -Wall -Wpedantic -lm
+CFLAGS = -g -std=c99 -lnetpbm -Werror -Wall -Wpedantic -lm -Wno-unused-variable
 
-mnist-shenanigans: $(obj)
+libs = mnist_loader.c stoopidnet.c
+
+all: mnist-shenanigans mnist-peek
+
+mnist-shenanigans: main.c $(libs)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+
+mnist-peek: mnist_peek.c $(libs)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
 .PHONY: clean
