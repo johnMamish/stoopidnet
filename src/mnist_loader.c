@@ -35,6 +35,7 @@ int load_label_file(const char* filepath, uint8_t** target)
                filepath, head[1], (int)r);
         fclose(fp);
         free(*target);
+        *target = NULL;
         return 0;
     }
 
@@ -87,6 +88,7 @@ cleanup:
         free((*target)[i]);
     }
     free(*target);
+    *target = NULL;
     return 0;
 }
 
@@ -103,13 +105,36 @@ int load_label_file_doubles(const char* filepath, double*** target)
     } else {
         *target = malloc(numel * sizeof(double*));
         for (int i = 0; i < numel; i++) {
-            (*target)[i] = 0.;
+            (*target)[i] = malloc(10 * sizeof(double));
+            for (int j = 0; j < 10; j++) {
+                ((*target)[i])[j] = (j == labels_u8[i]) ? 1.0 : 0.0;
+            }
         }
     }
+    free(labels_u8);
 
+    return numel;
 }
 
 int load_data_file_doubles(const char* filepath, double*** target)
 {
+    uint8_t** data_u8;
+    uint32_t wh[2];
+    int numel = load_data_file(filepath, wh, &data_u8);
 
+    if (numel == 0) {
+        *target = NULL;
+    } else {
+        *target = calloc(numel, sizeof(double*));
+        for (int i = 0; i < numel; i++) {
+            ((*target)[i]) = malloc(sizeof(double) * wh[0] * wh[1]);
+            for (int j = 0; j < (wh[0] * wh[1]); j++) {
+                ((*target)[i])[j] = (double)(data_u8[i])[j];
+            }
+            free(data_u8[i]);
+        }
+    }
+
+    free(data_u8);
+    return numel;
 }

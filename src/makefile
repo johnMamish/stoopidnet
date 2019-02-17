@@ -6,7 +6,9 @@ CFLAGS = -g -std=c99 -lnetpbm -Werror -Wall -Wpedantic -lm -Wno-unused-variable
 
 libs = mnist_loader.c stoopidnet.c
 
-all: mnist-shenanigans mnist-peek stoopidnet-test-serdes
+execs = mnist-shenanigans mnist-peek stoopidnet-test-serdes stoopidnet-train stoopidnet-run
+
+all: mnist-shenanigans mnist-peek stoopidnet-test-serdes stoopidnet-train stoopidnet-run
 
 mnist-shenanigans: main.c $(libs)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
@@ -17,6 +19,12 @@ mnist-peek: mnist_peek.c $(libs)
 stoopidnet-test-serdes: stoopidnet_test_serdes.c $(libs)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
+stoopidnet-train: stoopidnet_train.c $(libs)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+
+stoopidnet-run: stoopidnet_run.c $(libs)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+
 .PHONY: clean
 clean:
-	rm -f $(obj) mnist-shenanigans
+	rm -f $(obj) $(execs)

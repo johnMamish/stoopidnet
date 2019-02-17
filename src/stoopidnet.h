@@ -40,6 +40,9 @@ void stoopidnet_add_fc_layer_with_starting_weights(stoopidnet_t* net,
                                                    uint32_t num_nodes,
                                                    double* weights);
 
+stoopidnet_t* stoopidnet_load_from_file(const char* file);
+int stoopidnet_store_to_file(stoopidnet_t* net, const char* file);
+
 uint32_t stoopidnet_get_num_layers(stoopidnet_t* net);
 uint32_t stoopidnet_get_num_nodes_in_layer(stoopidnet_t* net, uint32_t layer_idx);
 void stoopidnet_set_layer_weights(stoopidnet_t* net, uint32_t layer_idx, double* weights);

@@ -23,7 +23,7 @@ int load_data_file(const char* filepath, uint32_t wh[2], uint8_t*** target);
  */
 int load_label_file_doubles(const char* filepath, double*** target);
 
-int load_data_filedoubles(const char* filepath, double*** target);
+int load_data_file_doubles(const char* filepath, double*** target);
 
 
 #endif

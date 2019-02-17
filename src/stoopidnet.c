@@ -157,7 +157,7 @@ stoopidnet_t* stoopidnet_deserialize(uint8_t *data, uint32_t datalen)
     // get all biases.
     for (int layer = 0; layer < (net->num_layers - 1); layer++) {
         net->biases[layer] = malloc(net->layer_sizes[layer + 1] * sizeof(double));
-        for (int j = 0; j < net->layer_sizes[layer]; j++) {
+        for (int j = 0; j < net->layer_sizes[layer + 1]; j++) {
             if (idx >= datalen) {
                 goto failed_3;
             }
@@ -240,7 +240,7 @@ int stoopidnet_store_to_file(stoopidnet_t* net, const char* file)
         goto cleanup;
     }
 
-    size_t writelen = fwrite(data, sizeof(uint8_t), sz, fp);
+    size_t writelen = fwrite(data, sizeof(uint8_t), len, fp);
     fclose(fp);
     if (writelen != len) {
         fprintf(stderr, "Error writing network to file\n");
@@ -317,7 +317,7 @@ void stoopidnet_evaluate(stoopidnet_t* net, double* input, double** output)
     double *activiation_next = NULL;
 
     for (int l = 1; l < net->num_layers; l++) {
-        activiation_next = malloc(net->layer_sizes[l]);
+        activiation_next = calloc(net->layer_sizes[l], sizeof(double));
 
         // calculate next layer into activiation_next
         for (int j = 0; j < net->layer_sizes[l]; j++) {
