@@ -40,7 +40,7 @@ int main(int argc, char** argv)
     }
 
     // train.
-    stoopidnet_training_parameters_t train_params = { 3.0, 50 };
+    stoopidnet_training_parameters_t train_params = { 5.0, 20 };
     stoopidnet_train(net, &train_params, npics, pics, labels);
 
     // store the final network

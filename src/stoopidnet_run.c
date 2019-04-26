@@ -45,6 +45,7 @@ int main(int argc, char** argv)
     printf("  index | label | result | confidence\n"
            "--------|-------|--------|--------------\n");
 
+    int goodcount = 0;
     for (int i = 0; i < npics; i++) {
         double* output;
         stoopidnet_evaluate(net, pics[i], &output);
@@ -53,6 +54,11 @@ int main(int argc, char** argv)
 
         printf("%7i |     %i |      %i |   %1.5lf\n", i, label, result, output[result]);
 
+        if (label == result) {
+            goodcount++;
+        }
+
         free(output);
     }
+    printf("accuracy: %i / %i\r\n", goodcount, npics);
 }

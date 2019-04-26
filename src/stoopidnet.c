@@ -273,7 +273,7 @@ stoopidnet_t* stoopidnet_load_from_file(const char* file)
     uint32_t sz = ftell(fp);
     rewind(fp);
     uint8_t* data = malloc(sz);
-    fread(data, sizeof(uint8_t), sz, fp);
+    int foo = fread(data, sizeof(uint8_t), sz, fp);
 
     stoopidnet_t* net = stoopidnet_deserialize(data, sz);
     return net;
@@ -411,6 +411,7 @@ void stoopidnet_train(stoopidnet_t* net,
     }
 
     // do mini batches
+    int prev_print = 0;
     double* grad_cost = malloc(net->layer_sizes[net->num_layers - 1] * sizeof(double));
     for (int i = 0; i < n_inputs;) {
         // reset gradient vectors
@@ -432,24 +433,34 @@ void stoopidnet_train(stoopidnet_t* net,
                                                                             inputs[shuffle[i]]);
 
             // backpropagate
-            // final layer is special case
+            // final layer is special case:
+            // BP1: d_L = grada(C) hadamard sig'(z_L)
             int backprop_layer = net->num_layers - 1;
             for (int k = 0; k < net->layer_sizes[net->num_layers - 1]; k++) {
                 layer_error[backprop_layer][k] = ((fp->a[backprop_layer][k] -
                                                        (outputs[shuffle[i]])[k]) *
                                                       sigmoid_prime(fp->a[backprop_layer][k]));
+                if (isnan(layer_error[backprop_layer][k])) {
+                    printf("nan!!!\r\n");
+                }
             }
             backprop_layer--;
+            // calc BP2: d_l = ((w_{l+1})_T * d_{l+1}) hadamard sig'(z_l)
             for (;backprop_layer > 0; backprop_layer--) {
                 for (int k = 0; k < net->layer_sizes[backprop_layer]; k++) {
                     layer_error[backprop_layer][k] = 0.;
-                    for (int l = 0; l < net->layer_sizes[backprop_layer - 1]; l++) {
-                        int idx = (k * net->layer_sizes[backprop_layer - 1]) + l;
+                    for (int l = 0; l < net->layer_sizes[backprop_layer + 1]; l++) {
+                        int idx = (l * net->layer_sizes[backprop_layer]) + k;
+                        //printf("backprop_layer = %i | idx = %05i | l = %04i | k = %04i\r\n",
+                        //backprop_layer, idx, l, k);
                         layer_error[backprop_layer][k] +=
-                            (net->weights[backprop_layer - 1][idx] *
-                             layer_error[backprop_layer + 1][k]);
+                            (net->weights[backprop_layer][idx] *
+                             layer_error[backprop_layer + 1][l]);
                     }
                     layer_error[backprop_layer][k] *= sigmoid_prime(fp->z[backprop_layer][k]);
+                    if (isnan(layer_error[backprop_layer][k])) {
+                        *((volatile char*)0) = 0;
+                    }
                 }
             }
 
@@ -477,17 +488,20 @@ void stoopidnet_train(stoopidnet_t* net,
             }
         }
 
-        // print stats after training round.
-        int num_good = 0;
-        for (int j = 0; j < n_inputs; j++) {
-            double* output;
-            stoopidnet_evaluate(net, inputs[j], &output);
+        // print stats after every 1000 samples processed
+        if (((prev_print + 1000) < i) || (i >= n_inputs)) {
+            prev_print = i;
+            int num_good = 0;
+            for (int j = 0; j < n_inputs; j++) {
+                double* output;
+                stoopidnet_evaluate(net, inputs[j], &output);
 
-            if(maxidx(output, 10) == (maxidx(inputs[j], 10))) {
-                num_good++;
+                if(maxidx(output, 10) == (maxidx(outputs[j], 10))) {
+                    num_good++;
+                }
             }
+            printf("%i examples trained. %i / %i accuracy\n", i, num_good, n_inputs);
         }
-        printf("%i examples trained. %i / %i accuracy\n", i, num_good, n_inputs);
     }
 }
 
@@ -495,15 +509,14 @@ void stoopidnet_train(stoopidnet_t* net,
 ////////////////////////////////////////////////////////////////
 // static function impl
 ////////////////////////////////////////////////////////////////
-static double sigmoid(double z)
+static double sigmoid(const double z)
 {
     return 1. / (1. + exp(-z));
 }
 
-static double sigmoid_prime(double z)
+static double sigmoid_prime(const double z)
 {
-    double enz = exp(-z);
-    return (enz / ((1 + enz) * (1 + enz)));
+    return (sigmoid(z) * (1 - sigmoid(z)));
 }
 
 static int* gen_shuffled_ints(int n)
