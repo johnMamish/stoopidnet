@@ -2,8 +2,8 @@ src = $(wildcard *.c)
 obj = $(src:.c=.o)
 
 CC = gcc
-CFLAGS = -g -std=c99 -lnetpbm -Werror -Wall -Wpedantic -lm -Wno-unused-variable -Ofast
-CFLAGS += -fsanitize=address
+CFLAGS = -g -std=c99 -lnetpbm  -Wall -Wpedantic -lm -Wno-unused-variable -Ofast
+#CFLAGS += -fsanitize=address
 
 libs = mnist_loader.c stoopidnet.c
 

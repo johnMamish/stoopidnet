@@ -43,6 +43,12 @@ typedef struct stoopidnet_forward_prop_results
 // static helper function decls
 ////////////////////////////////////////////////////////////////
 
+static double box_mueller_norm()
+{
+    double u[2] = { ((double)rand()) / ((double)RAND_MAX), ((double)rand()) / ((double)RAND_MAX) };
+    return sqrt(-2 * log(u[0])) * cos(2 * 3.141592653 * u[1]);
+}
+
 static int maxidx(double* vec, int len)
 {
     double maxval = vec[0];
@@ -322,15 +328,14 @@ void stoopidnet_add_fc_layer(stoopidnet_t* net, uint32_t num_nodes)
     // Set up the biases and weights to be randomly distributed on [-1, 1]
     net->biases[net->num_layers - 2] = malloc(net->layer_sizes[net->num_layers - 1] * sizeof(double));
     for (int i = 0; i < net->layer_sizes[net->num_layers - 1]; i++) {
-        (net->biases[net->num_layers - 2])[i] = 2.0 * ((((double)rand()) / ((double)RAND_MAX)) - 0.5);
+        (net->biases[net->num_layers - 2])[i] = box_mueller_norm();
     }
 
     int nweights = net->layer_sizes[net->num_layers - 1] * net->layer_sizes[net->num_layers - 2];
     net->weights[net->num_layers - 2] = malloc(nweights * sizeof(double));
 
     for (int i = 0; i < nweights; i++) {
-        double randn = 2.0 * ((((double)rand()) / ((double)RAND_MAX)) - 0.5);
-        (net->weights[net->num_layers - 2])[i] = randn;
+        (net->weights[net->num_layers - 2])[i] = box_mueller_norm();
     }
 }
 
@@ -380,7 +385,7 @@ void stoopidnet_evaluate(stoopidnet_t* net, double* input, double** output)
                 int idx = (j * net->layer_sizes[l - 1]) + k;
                 accum += (net->weights[l - 1])[idx] * activation[k];
             }
-            activiation_next[j] = sigmoid(accum - (net->biases[l - 1])[j]);
+            activiation_next[j] = sigmoid(accum + (net->biases[l - 1])[j]);
         }
 
         // copy new layer into activiation.
@@ -451,8 +456,6 @@ void stoopidnet_train(stoopidnet_t* net,
                     layer_error[backprop_layer][k] = 0.;
                     for (int l = 0; l < net->layer_sizes[backprop_layer + 1]; l++) {
                         int idx = (l * net->layer_sizes[backprop_layer]) + k;
-                        //printf("backprop_layer = %i | idx = %05i | l = %04i | k = %04i\r\n",
-                        //backprop_layer, idx, l, k);
                         layer_error[backprop_layer][k] +=
                             (net->weights[backprop_layer][idx] *
                              layer_error[backprop_layer + 1][l]);
@@ -488,8 +491,8 @@ void stoopidnet_train(stoopidnet_t* net,
             }
         }
 
-        // print stats after every 1000 samples processed
-        if (((prev_print + 1000) < i) || (i >= n_inputs)) {
+        // print stats after every 10000 samples processed
+        if (((prev_print + 10000) <= i) || (i >= n_inputs)) {
             prev_print = i;
             int num_good = 0;
             for (int j = 0; j < n_inputs; j++) {
@@ -572,8 +575,8 @@ static stoopidnet_forward_prop_results_t* stoopidnet_forward_prop(stoopidnet_t* 
                 int idx = (j * net->layer_sizes[l - 1]) + k;
                 accum += (net->weights[l - 1])[idx] * results->a[l - 1][k];
             }
-            results->z[l][j] = accum;
-            results->a[l][j] = sigmoid(accum - (net->biases[l - 1])[j]);
+            results->z[l][j] = accum + (net->biases[l - 1][j]);
+            results->a[l][j] = sigmoid(results->z[l][j]);
         }
     }
 
