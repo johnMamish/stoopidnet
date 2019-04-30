@@ -444,7 +444,7 @@ void stoopidnet_train(stoopidnet_t* net,
             for (int k = 0; k < net->layer_sizes[backprop_layer]; k++) {
                 layer_error[backprop_layer][k] = ((fp->a[backprop_layer][k] -
                                                        (outputs[shuffle[i]])[k]) *
-                                                      sigmoid_prime(fp->a[backprop_layer][k]));
+                                                      sigmoid_prime(fp->z[backprop_layer][k]));
             }
             backprop_layer--;
             // calc BP2: d_l = ((w_{l+1})_T * d_{l+1}) hadamard sig'(z_l)
