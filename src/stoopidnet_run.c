@@ -42,17 +42,25 @@ int main(int argc, char** argv)
     }
 
     // run
-    printf("  index | label | result | confidence\n"
-           "--------|-------|--------|--------------\n");
+    //printf("  index | label | result | confidence\n"
+    //"--------|-------|--------|--------------\n");
 
     int goodcount = 0;
+    int confident_but_wrong = 0;
+    int low_confidence      = 0;
+
     for (int i = 0; i < npics; i++) {
         double* output;
         stoopidnet_evaluate(net, pics[i], &output);
         int label  = maxidx(labels[i], 10);
         int result = maxidx(output, 10);
 
-        printf("%7i |     %i |      %i |   %1.5lf\n", i, label, result, output[result]);
+        if ((label != result) && (output[result] > 0.7)) {
+            //printf("%7i |     %i |      %i |   %1.5lf\n", i, label, result, output[result]);
+            confident_but_wrong++;
+        } else if ((label == result) && (output[result] < 0.4)) {
+            low_confidence++;
+        }
 
         if (label == result) {
             goodcount++;
@@ -61,4 +69,6 @@ int main(int argc, char** argv)
         free(output);
     }
     printf("accuracy: %i / %i\r\n", goodcount, npics);
+    printf("confident but wrong: %i / %i\n", confident_but_wrong, npics);
+    printf("low confidence: %i / %i\n", low_confidence, npics);
 }

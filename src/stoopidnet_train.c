@@ -20,7 +20,7 @@ int main(int argc, char** argv)
     stoopidnet_t* net;
     if (!strcmp(argv[1], "null")) {
         net = stoopidnet_create(784);
-        stoopidnet_add_fc_layer(net, 20);
+        stoopidnet_add_fc_layer(net, 30);
         stoopidnet_add_fc_layer(net, 10);
     } else {
         net = stoopidnet_load_from_file(argv[1]);
@@ -40,7 +40,7 @@ int main(int argc, char** argv)
     }
 
     // train.
-    stoopidnet_training_parameters_t train_params = { 5.0, 20 };
+    stoopidnet_training_parameters_t train_params = { 1.0, 10 };
     stoopidnet_train(net, &train_params, npics, pics, labels);
 
     // store the final network
