@@ -130,6 +130,7 @@ int load_data_file_doubles(const char* filepath, double*** target)
             ((*target)[i]) = malloc(sizeof(double) * wh[0] * wh[1]);
             for (int j = 0; j < (wh[0] * wh[1]); j++) {
                 ((*target)[i])[j] = (double)(data_u8[i])[j];
+                ((*target)[i])[j] /= 255.0;
             }
             free(data_u8[i]);
         }
