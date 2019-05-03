@@ -405,7 +405,7 @@ void stoopidnet_train(stoopidnet_t* net,
                       double** outputs)
 {
     // shuffle training examples
-    int* shuffle = gen_shuffled_ints(n_inputs);
+    //int* shuffle = gen_shuffled_ints(n_inputs);
 
     // setup empty arrays for accumulating average of gradients over training mini-batch
     double** weight_grads = calloc(net->num_layers - 1, sizeof(double*));
@@ -417,7 +417,6 @@ void stoopidnet_train(stoopidnet_t* net,
 
     // do mini batches
     int prev_print = 0;
-    double* grad_cost = malloc(net->layer_sizes[net->num_layers - 1] * sizeof(double));
     for (int i = 0; i < n_inputs;) {
         // reset gradient vectors
         for (int j = 0; j < net->num_layers - 1; j++) {
@@ -432,10 +431,10 @@ void stoopidnet_train(stoopidnet_t* net,
             layer_error[j] = malloc(net->layer_sizes[j] * sizeof(double));
         }
 
-        for (int j = 0; j < params->batch_size; j++, i++) {
+        for (int j = 0; (j < params->batch_size) && (i < n_inputs); j++, i++) {
             // first run network forward and cache z-values and a-values.
             stoopidnet_forward_prop_results_t* fp = stoopidnet_forward_prop(net,
-                                                                            inputs[shuffle[i]]);
+                                                                            inputs[i]);
 
             // backpropagate
             // final layer is special case:
@@ -443,7 +442,7 @@ void stoopidnet_train(stoopidnet_t* net,
             int backprop_layer = net->num_layers - 1;
             for (int k = 0; k < net->layer_sizes[backprop_layer]; k++) {
                 layer_error[backprop_layer][k] = ((fp->a[backprop_layer][k] -
-                                                       (outputs[shuffle[i]])[k]) *
+                                                   (outputs[i])[k]) *
                                                       sigmoid_prime(fp->z[backprop_layer][k]));
             }
             backprop_layer--;
@@ -485,19 +484,56 @@ void stoopidnet_train(stoopidnet_t* net,
             }
         }
 
+        if (0) {
+            for (int i = 0; i < 1; i++) {
+                for (int j = 0; j < net->layer_sizes[0]; j++) {
+                    int idx = (i * net->layer_sizes[0]) + j;
+                    printf("%+.8f ", weight_grads[0][idx]);
+                    if (idx %16 == 7)
+                        printf("\n");
+                }
+                printf("\n\n");
+            }
+        }
+
+        //printf("weights = {%lf, %lf}, bias = {%lf}\n", net->weights[0][0], net->weights[0][1], net->biases[0][0]);
+
         // print stats after every 10000 samples processed
-        if (((prev_print + 10000) <= i) || (i >= n_inputs)) {
+        if (((prev_print + 20000) <= i) || (i >= n_inputs)) {
             prev_print = i;
             int num_good = 0;
             for (int j = 0; j < n_inputs; j++) {
                 double* output;
                 stoopidnet_evaluate(net, inputs[j], &output);
 
-                if(maxidx(output, 10) == (maxidx(outputs[j], 10))) {
+                int size = net->layer_sizes[net->num_layers - 1];
+                #if 1
+                if(maxidx(output, size) == (maxidx(outputs[j], size))) {
+                    num_good++;
+                    }
+                #else
+                //printf("network says %lf && %lf makes %lf\r\n", inputs[j][0], inputs[j][1], output[0]);
+                if (fabs(outputs[j][0] - output[0]) < 0.5) {
                     num_good++;
                 }
+                #endif
             }
-            printf("%i examples trained. %i / %i accuracy\n", i, num_good, n_inputs);
+            printf("%i examples trained. %i / %i accuracy.\n", i, num_good, n_inputs);
+
+            if (0) {
+                printf("\n");
+                //for (int i = 0; i < net->layer_sizes[1]; i++) {
+                for (int i = 0; i < 1; i++) {
+                    for (int j = 0; j < net->layer_sizes[0]; j++) {
+                        int idx = (i * net->layer_sizes[0]) + j;
+                        printf("%+.4f ", net->weights[0][idx]);
+                        if (idx %16 == 15)
+                            printf("\n");
+                    }
+                    printf("\n\n");
+                }
+            }
+            printf("\n\n");
         }
     }
 }
@@ -550,13 +586,13 @@ static stoopidnet_forward_prop_results_t* stoopidnet_forward_prop(stoopidnet_t* 
     stoopidnet_forward_prop_results_t* results =
         calloc(1, sizeof(stoopidnet_forward_prop_results_t));
 
-    results->a = calloc(net->num_layers, sizeof(double*));
     results->z = calloc(net->num_layers, sizeof(double*));
+    results->a = calloc(net->num_layers, sizeof(double*));
 
+    results->z[0] = NULL;
     results->a[0] = malloc(net->layer_sizes[0] * sizeof(double));
 
     memcpy(results->a[0], input, sizeof(double) * net->layer_sizes[0]);
-    double *activiation_next = NULL;
 
     for (int l = 1; l < net->num_layers; l++) {
         results->z[l] = calloc(net->layer_sizes[l], sizeof(double));

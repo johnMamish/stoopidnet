@@ -26,6 +26,9 @@ stoopidnet-train: stoopidnet_train.c $(libs)
 stoopidnet-run: stoopidnet_run.c $(libs)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
+stoopidnet-nand: stoopidnet_nand.c $(libs)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+
 .PHONY: clean
 clean:
 	rm -f $(obj) $(execs)
