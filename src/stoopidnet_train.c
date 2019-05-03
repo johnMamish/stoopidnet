@@ -1,5 +1,6 @@
 #include "mnist_loader.h"
 #include "stoopidnet.h"
+#include "math_util.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,8 +41,23 @@ int main(int argc, char** argv)
     }
 
     // train.
-    stoopidnet_training_parameters_t train_params = { 1.0, 10 };
-    stoopidnet_train(net, &train_params, npics, pics, labels);
+    stoopidnet_training_parameters_t train_params = { 2.0, 10 };
+    const int nepochs = 30;
+    for (int i = 0; i < nepochs; i++) {
+        stoopidnet_train(net, &train_params, npics, pics, labels);
+
+        int num_good = 0;
+        for (int j = 0; j < npics; j++) {
+            double* output;
+            stoopidnet_evaluate(net, pics[j], &output);
+
+            int size = 10;
+            if(maxidx(output, size) == (maxidx(labels[j], size))) {
+                num_good++;
+            }
+        }
+        printf("%i examples trained. %i / %i accuracy.\n", i, num_good, npics);
+    }
 
     // store the final network
     stoopidnet_store_to_file(net, argv[2]);

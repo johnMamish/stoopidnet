@@ -49,21 +49,6 @@ static double box_mueller_norm()
     return sqrt(-2 * log(u[0])) * cos(2 * 3.141592653 * u[1]);
 }
 
-static int maxidx(double* vec, int len)
-{
-    double maxval = vec[0];
-    double maxidx = 0;
-
-    for (int i = 1; i < len; i++) {
-        if (vec[i] > maxval) {
-            maxval = vec[i];
-            maxidx = i;
-        }
-    }
-
-    return maxidx;
-}
-
 /**
  * Calculates the sigmoid function for a given value.
  */
@@ -405,7 +390,7 @@ void stoopidnet_train(stoopidnet_t* net,
                       double** outputs)
 {
     // shuffle training examples
-    //int* shuffle = gen_shuffled_ints(n_inputs);
+    int* shuffle = gen_shuffled_ints(n_inputs);
 
     // setup empty arrays for accumulating average of gradients over training mini-batch
     double** weight_grads = calloc(net->num_layers - 1, sizeof(double*));
@@ -434,7 +419,7 @@ void stoopidnet_train(stoopidnet_t* net,
         for (int j = 0; (j < params->batch_size) && (i < n_inputs); j++, i++) {
             // first run network forward and cache z-values and a-values.
             stoopidnet_forward_prop_results_t* fp = stoopidnet_forward_prop(net,
-                                                                            inputs[i]);
+                                                                            inputs[shuffle[i]]);
 
             // backpropagate
             // final layer is special case:
@@ -442,7 +427,7 @@ void stoopidnet_train(stoopidnet_t* net,
             int backprop_layer = net->num_layers - 1;
             for (int k = 0; k < net->layer_sizes[backprop_layer]; k++) {
                 layer_error[backprop_layer][k] = ((fp->a[backprop_layer][k] -
-                                                   (outputs[i])[k]) *
+                                                   (outputs[shuffle[i]])[k]) *
                                                       sigmoid_prime(fp->z[backprop_layer][k]));
             }
             backprop_layer--;
@@ -482,58 +467,6 @@ void stoopidnet_train(stoopidnet_t* net,
                     net->weights[layer][widx] -= lrate * (weight_grads[layer][widx]);
                 }
             }
-        }
-
-        if (0) {
-            for (int i = 0; i < 1; i++) {
-                for (int j = 0; j < net->layer_sizes[0]; j++) {
-                    int idx = (i * net->layer_sizes[0]) + j;
-                    printf("%+.8f ", weight_grads[0][idx]);
-                    if (idx %16 == 7)
-                        printf("\n");
-                }
-                printf("\n\n");
-            }
-        }
-
-        //printf("weights = {%lf, %lf}, bias = {%lf}\n", net->weights[0][0], net->weights[0][1], net->biases[0][0]);
-
-        // print stats after every 10000 samples processed
-        if (((prev_print + 20000) <= i) || (i >= n_inputs)) {
-            prev_print = i;
-            int num_good = 0;
-            for (int j = 0; j < n_inputs; j++) {
-                double* output;
-                stoopidnet_evaluate(net, inputs[j], &output);
-
-                int size = net->layer_sizes[net->num_layers - 1];
-                #if 1
-                if(maxidx(output, size) == (maxidx(outputs[j], size))) {
-                    num_good++;
-                    }
-                #else
-                //printf("network says %lf && %lf makes %lf\r\n", inputs[j][0], inputs[j][1], output[0]);
-                if (fabs(outputs[j][0] - output[0]) < 0.5) {
-                    num_good++;
-                }
-                #endif
-            }
-            printf("%i examples trained. %i / %i accuracy.\n", i, num_good, n_inputs);
-
-            if (0) {
-                printf("\n");
-                //for (int i = 0; i < net->layer_sizes[1]; i++) {
-                for (int i = 0; i < 1; i++) {
-                    for (int j = 0; j < net->layer_sizes[0]; j++) {
-                        int idx = (i * net->layer_sizes[0]) + j;
-                        printf("%+.4f ", net->weights[0][idx]);
-                        if (idx %16 == 15)
-                            printf("\n");
-                    }
-                    printf("\n\n");
-                }
-            }
-            printf("\n\n");
         }
     }
 }

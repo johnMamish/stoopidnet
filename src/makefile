@@ -5,7 +5,7 @@ CC = gcc
 CFLAGS = -g -std=c99 -lnetpbm  -Wall -Wpedantic -lm -Wno-unused-variable -Ofast
 #CFLAGS += -fsanitize=address
 
-libs = mnist_loader.c stoopidnet.c
+libs = mnist_loader.c stoopidnet.c math_util.c
 
 execs = mnist-shenanigans mnist-peek stoopidnet-test-serdes stoopidnet-train stoopidnet-run
 
